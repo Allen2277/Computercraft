@@ -1,0 +1,4 @@
+term.setCursorPos(1,17)
+print("Celí/Iomega Rev. 2.2, - Madpondia Inc.  ")
+term.setCursorPos(1,18)
+print("File manager V.3/Aurora Kernal 3.2.3rev85 ")
