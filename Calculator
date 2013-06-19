@@ -1,0 +1,41 @@
+print("Welcome to the calculator!")
+
+repeat
+
+print ("Please choose one of the four option: for addition type '+', for abstraction type '-', for multiplication type '*' and for division type '/'.")
+calc_q = read()
+print("Put your first number here: ")
+number1 = read()
+print("Put your second number here: ")
+number2 = read()
+
+if calc_q == "+" then
+etaresult = number1+number2
+print("The result is: ")
+print(result)
+
+elseif calc_q == "-" then
+result = number1-number2
+print("The result is: ")
+print(result)
+
+elseif calc_q == "*" then
+result = number1*number2
+print("The result is: ")
+print(result)
+
+elseif calc_q == "/" then
+result = number1/number2
+print("The result is: ")
+print(result)
+
+else print("You put the wrong operation!")
+end
+
+print("If you want to use the calculator again, press enter. If you want to exit the program, type 'exit'")
+continue_q = read()
+
+until (continue_q == "exit") 
+
+print("Thank you for usining Allen's calculator!")
+End of calculator
