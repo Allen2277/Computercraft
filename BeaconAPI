@@ -1,0 +1,124 @@
+local modem
+for k,v in pairs(peripheral.getNames()) do
+        if peripheral.getType(v)=="modem" and peripheral.call(v,"isWireless") then
+                modem=peripheral.wrap(v)
+        end
+end
+assert(modem,"No wireless modem found")
+ 
+ 
+function goTo(channel, msg)
+if not turtle then error("Can't go with a computer. Shtewpid",2) end
+local isGPS
+if channel==true and msg==nil then
+        channel=65534
+        isGPS=true
+end
+modem.closeAll()
+modem.open(channel)
+local distanceT={}
+local function checkIfBeacon(ch,m)
+        local e,s,c,r,m,d
+        if not modem.isOpen(ch) then modem.open(ch) end
+        modem.transmit(ch,ch,"PING")
+        local id=os.startTimer(2)
+        repeat
+                 e,s,c,r,m,d=os.pullEventRaw()
+        until (e=="modem_message" and c==ch) or (e=="timer" and s==id)
+        if e=="timer" then return false end
+        return true
+end
+if not checkIfBeacon(channel,msg) then
+        return false, "Invalid beacon."
+end
+local function getData()
+modem.transmit(channel,channel,"PING")
+local eventData
+local tID=os.startTimer(5)
+repeat
+  eventData={os.pullEventRaw()}
+  if eventData[1]=="modem_message" and (eventData[5]==msg or msg==nil) then return eventData end
+  --print("test")
+until eventData[1]=="terminate" or (eventData[1]=="timer" and eventData[2]==tID)
+return (eventData[1]=="terminate" and error("Terminated",0)) or error("Lost signal.",2)
+end
+local function getCloser(func)
+        while true do
+                if turtle.detect() and func==turtle.forward then turtle.dig() end
+                if turtle.detectUp() and func==turtle.up then turtle.digUp() end
+                if turtle.detectDown() and func==turtle.down then turtle.digDown() end
+                func()
+                local nDat=getData()
+                if nDat[6]>distanceT[#distanceT] or nDat[6]==1 then break
+                else
+                        table.insert(distanceT,nDat[6])
+                end
+        end
+end
+local eventData=getData()
+if isGPS then msg=eventData[5] end
+table.insert(distanceT,eventData[6])
+turtle.up()
+local nData=getData()
+table.insert(distanceT,nData[6])
+if distanceT[#distanceT-1]>distanceT[#distanceT] then
+--This means its higher
+        getCloser(turtle.up)
+        turtle.down()
+        turtle.dig()
+else
+        --Lower
+        getCloser(turtle.down)
+        turtle.up()
+        turtle.dig()
+end
+local eventData=getData()
+table.insert(distanceT,eventData[6])
+turtle.forward()
+local nData=getData()
+table.insert(distanceT,nData[6])
+if distanceT[#distanceT-1]>distanceT[#distanceT] then
+        --Keep going forward
+        getCloser(turtle.forward)
+        turtle.back()
+else
+        --Moonwalk
+        turtle.turnRight()
+        turtle.turnRight()
+        getCloser(turtle.forward)
+        turtle.back()
+        --turtle.turnRight()
+        --turtle.turnRight()
+end
+--Turn right and do (almost) the same thing
+turtle.turnRight()
+ 
+local eventData=getData()
+table.insert(distanceT,eventData[6])
+turtle.forward()
+local nData=getData()
+table.insert(distanceT,nData[6])
+if distanceT[#distanceT-1]>distanceT[#distanceT] then
+        --Keep going forward
+        getCloser(turtle.forward)
+else
+        --Moonwalk
+        turtle.turnRight()
+        turtle.turnRight()
+        getCloser(turtle.forward)
+end
+return peripheral.getType("front")=="computer" or peripheral.getType("front")=="turtle" --Return true if its an actual host.
+end
+ 
+ 
+function host(channel, msg)
+        modem.closeAll()
+        modem.open(channel)
+        repeat
+                local eventData={os.pullEventRaw("modem_message")}
+                if eventData[1]=="modem_message" and eventData[3]==channel and eventData[5]=="PING" then
+                        modem.transmit(channel,channel,msg)
+                end
+        until eventData[1]=="terminate"
+        return error("Terminated",0)
+end
